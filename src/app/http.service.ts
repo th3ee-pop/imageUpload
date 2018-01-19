@@ -63,4 +63,7 @@ export class HttpService {
         'name': name
       })).do(res => console.log(res));
   }
+  getPatientList(): Observable<any> {
+    return this.http.get(this.baseUrl + '/cancer/patientlist/').do(res => console.log(res));
+  }
 }

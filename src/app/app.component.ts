@@ -20,11 +20,13 @@ export class AppComponent implements OnInit {
 
   hasBaseDropZoneOver = false;
   files: any[] = [];
-  searchPatient = 'th3ee';
+  searchPatient = '';
+  newPatient = '';
   searchSlice: string;
   slicelist = [];
   results: string;
   loading = false;
+  patientList: Array<string>;
 
   fileOverBase(e: any): void {
     this.hasBaseDropZoneOver = e;
@@ -46,11 +48,6 @@ export class AppComponent implements OnInit {
   test() {
     console.log(this.uploader);
   }
-  getDiagnosis() {
-    this.httpServe.getDiagnosis('edemaYAN_FEN_FA').subscribe(res => {
-      console.log(res);
-    });
-  }
   file() {
     const patient = this.searchPatient;
     this.uploader.queue[0].onSuccess = (response, status, headers) => {
@@ -69,40 +66,51 @@ export class AppComponent implements OnInit {
     };
     this.uploader.queue[0].upload(); // 开始上传
   }
-  getPng(slice: any) {
+  getPng(searchName: string, slice: any) {
     console.log(slice);
     console.log('searching');
-    this.httpServe.getPng('edemaYAN_FEN_FA', slice).subscribe(res => {
+    this.httpServe.getPng(searchName, slice).subscribe(res => {
       const urlCreator = window.URL;
       this.imageData = this.sanitizer.bypassSecurityTrustUrl(
         urlCreator.createObjectURL(res));
     });
   }
-  getSlices() {
-    this.httpServe.getList(this.searchPatient).subscribe(res => {
+  getSlices(searchName: string) {
+    this.httpServe.getList(searchName).subscribe(res => {
       this.loading = false;
       this.slicelist = res.Slices;
       console.log(this.slicelist.sort((a, b) => {
         return a - b;
       }));
-      this.searchSlice = this.slicelist[2];
-      this.getPng(this.searchSlice);
+      this.searchSlice = this.slicelist[0];
+      this.getPng(searchName, this.searchSlice);
+    });
+  }
+  getClassification(searchName: string) {
+    this.httpServe.getClassification(searchName).subscribe(res => {
+      console.log(res);
+      this.results = res.Result.prediction;
+      this.getSlices(searchName);
+    });
+  }
+  getPatientList() {
+    this.httpServe.getPatientList().subscribe(res => {
+      this.patientList = res.Patients;
     });
   }
   ngOnInit() {
     this.uploader.onBuildItemForm = (fileItem, form) => {
-      form.append('name', this.searchPatient);
+      form.append('name', this.newPatient);
       console.log(form);
     };
     this.uploader.onCompleteAll = () => {
       console.log('finished');
       this.loading = true;
-      this.httpServe.getClassification(this.searchPatient).subscribe(res => {
-        console.log(res);
-        this.results = res.Result.prediction;
-        this.getSlices();
-      });
+      this.searchPatient = this.newPatient;
+      this.getClassification(this.newPatient);
+      this.getPatientList();
     };
+    this.getPatientList();
     console.log('hello');
   }
 }

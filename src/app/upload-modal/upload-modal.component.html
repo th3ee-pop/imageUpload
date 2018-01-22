@@ -1,0 +1,100 @@
+<div>
+  <div nz-row>
+    <div nz-col [nzSpan]="12">
+      <h4 style="padding-bottom: 3px">
+        患者姓名
+      </h4>
+      <nz-input style="width: 60%" [nzType]="'text'" [(ngModel)]="newPatient">
+        <ng-template #prefix>
+        </ng-template>
+      </nz-input>
+      <br>
+      <nz-alert *ngIf="newPatient === '' && uploader.getNotUploadedItems().length" [nzType]="'warning'" [nzMessage]="'必须输入患者姓名'" [nzShowIcon]="'true'">
+      </nz-alert>
+    </div>
+  </div>
+  <br>
+  <div nz-row>
+    <input id="fileMultiple" accept type="file" ng2FileSelect [uploader]="uploader" (change)="selectedFileOnChanged($event)" multiple />
+  </div>
+  <br>
+  <br>
+  <div nz-row *ngIf="uploader.getNotUploadedItems().length">
+    <nz-card>
+      <div nz-row>
+        <div nz-col [nzSpan]="24">
+          <ng-template #title>文件上传队列</ng-template>
+          <ng-template #body>
+            <nz-table [nzScroll]="{ y: 240 }" #nzTable [nzDataSource]="files" [nzCustomNoResult]="true" [nzIsPagination]="false">
+              <div noResult>请选择文件上传</div>
+              <thead nz-thead>
+              <tr>
+                <th nz-th><span>文件名</span></th>
+                <th nz-th><span>大小</span></th>
+                <th nz-th><span>进度</span></th>
+                <th nz-th><span>状态</span></th>
+                <th nz-th><span>操作</span></th>
+              </tr>
+              </thead>
+              <tbody nz-tbody>
+              <tr nz-tbody-tr *ngFor="let item of nzTable.data">
+                <td nz-td><strong>{{ item?.file?.name }}</strong></td>
+                <td nz-td *ngIf="uploader.options.isHTML5" nowrap>{{ item?.file?.size/1024 | number:'.2' }} KB</td>
+                <td nz-td class="text-center" *ngIf="uploader.options.isHTML5">
+                  <nz-progress [ngModel]="item.progress" [nzStrokeWidth]="5"></nz-progress>
+                </td>
+                <td nz-td class="text-center">
+                  <span *ngIf="item.isSuccess"><nz-tag [nzColor]="'green'">成功</nz-tag></span>
+                  <span *ngIf="item.isCancel" class="mr-md"><nz-tag [nzColor]="'orange'">取消</nz-tag></span>
+                  <span *ngIf="item.isError"><nz-tag [nzColor]="'red'">失败</nz-tag></span>
+                  <span *ngIf="item.isReady"><nz-tag [nzColor]="'cyan'">上传</nz-tag ></span>
+                </td>
+                <td nz-td nowrap>
+                  <nz-button-group>
+                    <button nz-button (click)="item.upload()" [nzType]="'primary'" [disabled]="item.isReady || item.isUploading || item.isSuccess || newPatient === ''">
+                      <i class="anticon anticon-upload"></i>
+                    </button>
+                    <button nz-button (click)="item.cancel()" [disabled]="!item.isUploading">
+                      <i class="anticon anticon-close"></i>
+                    </button>
+                    <button nz-button (click)="item.remove()">
+                      <i class="anticon anticon-delete"></i>
+                    </button>
+                  </nz-button-group>
+                </td>
+              </tr>
+              </tbody>
+            </nz-table>
+          </ng-template>
+        </div>
+      </div>
+    </nz-card>
+    <div nz-row>
+      <div nz-col [nzSpan]="24">
+        <nz-card>
+          <ng-template #body>
+            <nz-progress [ngModel]="uploader.progress" [nzStrokeWidth]="5"></nz-progress>
+            <nz-button-group class="mt-md d-block">
+              <button nz-button (click)="uploader.uploadAll()" [nzType]="'primary'" [nzLoading]="uploader.isUploading" [disabled]="!uploader.getNotUploadedItems().length || newPatient === ''">
+                <i class="anticon anticon-upload"></i><span>上传全部</span>
+              </button>
+              <button nz-button (click)="uploader.cancelAll()" [disabled]="!uploader.isUploading">
+                <i class="anticon anticon-close"></i><span>取消全部</span>
+              </button>
+              <button nz-button (click)="uploader.clearQueue()" [disabled]="!uploader.queue.length">
+                <i class="anticon anticon-delete"></i><span>删除全部</span>
+              </button>
+            </nz-button-group>
+          </ng-template>
+        </nz-card>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="customize-footer">
+    <button nz-button [nzType]="'default'" [nzSize]="'large'" (click)="handleCancel($event)">
+      关闭
+    </button>
+  </div>
+</div>

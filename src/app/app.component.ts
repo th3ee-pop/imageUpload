@@ -3,6 +3,8 @@ import { FileDropModule, UploadEvent, UploadFile } from 'ngx-file-drop';
 import { FileUploader } from 'ng2-file-upload';
 import { HttpService } from './http.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { NzModalService } from 'ng-zorro-antd';
+import { UploadModalComponent } from './upload-modal/upload-modal.component';
 
 @Component({
   selector: 'app-root',
@@ -10,12 +12,6 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  uploader: FileUploader = new FileUploader({
-    url: 'http://59.110.52.133:9504/cancer/fileop/',    // http://202.117.54.95:8888/filesystem/fileop/
-    method: 'POST',
-    itemAlias: 'file',
-    autoUpload: false,
-  });
   imageData: any;
 
   hasBaseDropZoneOver = false;
@@ -27,45 +23,13 @@ export class AppComponent implements OnInit {
   results: string;
   loading = false;
   patientList: Array<string>;
-
-  fileOverBase(e: any): void {
-    this.hasBaseDropZoneOver = e;
+  check(e: any) {
     console.log(e);
   }
-  selectedFileOnChanged(event: any) {
-    console.log('-*->' + event.target);
-  }
-  constructor( private httpServe: HttpService, private sanitizer: DomSanitizer) {
-    this.uploader.onBeforeUploadItem = (item) => {
-      item.withCredentials = false;
-    };
-    this.uploader.onAfterAddingFile = (f) => {
-      this.files = this.uploader.queue;
-      // console.log('onAfterAddingFile');
-      return f;
-    };
-  }
-  test() {
-    console.log(this.uploader);
-  }
-  file() {
-    const patient = this.searchPatient;
-    this.uploader.queue[0].onSuccess = (response, status, headers) => {
-      // 上传文件成功
-      console.log(status);
-      console.log(response);
-      console.log(headers);
-      if (status === 200) {
-        // 上传文件后获取服务器返回的数据
-        const tempRes = JSON.parse(response);
-        console.log('-->' + tempRes);
-      }else {
-        // 上传文件后获取服务器返回的数据错误
-        console.log('上传文件后获取服务器返回的数据错误');
-      }
-    };
-    this.uploader.queue[0].upload(); // 开始上传
-  }
+  constructor( private httpServe: HttpService,
+               private sanitizer: DomSanitizer,
+               private modalService: NzModalService
+  ) { }
   getPng(searchName: string, slice: any) {
     console.log(slice);
     console.log('searching');
@@ -87,6 +51,7 @@ export class AppComponent implements OnInit {
     });
   }
   getClassification(searchName: string) {
+    this.loading = true;
     this.httpServe.getClassification(searchName).subscribe(res => {
       console.log(res);
       this.results = res.Result.prediction;
@@ -99,18 +64,29 @@ export class AppComponent implements OnInit {
     });
   }
   ngOnInit() {
-    this.uploader.onBuildItemForm = (fileItem, form) => {
-      form.append('name', this.newPatient);
-      console.log(form);
-    };
-    this.uploader.onCompleteAll = () => {
-      console.log('finished');
-      this.loading = true;
-      this.searchPatient = this.newPatient;
-      this.getClassification(this.newPatient);
-      this.getPatientList();
-    };
     this.getPatientList();
     console.log('hello');
+  }
+  showModalForUpload() {
+    const subscription = this.modalService.open({
+      title: '影像上传',
+      content: UploadModalComponent,
+      onCancel() {
+      },
+      footer: false,
+      componentParams: {
+        name: '测试component'
+      },
+      maskClosable: false,
+      closable: false
+    });
+    subscription.subscribe(result => {
+      console.log(result);
+      if (result.status === true) {
+        this.getPatientList();
+        this.getClassification(result.name);
+        this.searchPatient = result.name;
+      }
+    });
   }
 }

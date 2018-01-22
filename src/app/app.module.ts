@@ -8,9 +8,13 @@ import { AppComponent } from './app.component';
 import { FileDropModule } from 'ngx-file-drop';
 import { FileUploadModule } from 'ng2-file-upload';
 import { HttpService } from './http.service';
+import { UploadModalComponent } from './upload-modal/upload-modal.component';
+import { NzModalService } from 'ng-zorro-antd';
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    UploadModalComponent,
+    UploadModalComponent
   ],
   imports: [
     BrowserModule,
@@ -22,6 +26,7 @@ import { HttpService } from './http.service';
     NgZorroAntdModule.forRoot()
   ],
   bootstrap: [AppComponent],
-  providers: [HttpService]
+  providers: [HttpService, NzModalService],
+  entryComponents: [UploadModalComponent]
 })
 export class AppModule { }
